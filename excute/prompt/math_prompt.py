@@ -28,3 +28,11 @@ abstract_prompt = """
 
 Q：{{question}} 
 """
+
+
+relation_prompt = """
+角色：假设你是数学大师，请你根据概念1(concept1)和概念2(concept2)之间的联系，生成二者之间的关系，无需阐述过多内容，只需生成其关系relation即可。
+概念1：{{concept1}}
+概念2：{{concept2}}
+关系：
+"""

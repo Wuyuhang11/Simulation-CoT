@@ -4,8 +4,8 @@ import ast  # 抽象语法树库，用于解析Python字符串格式的代码
 import sympy  # 一个用于符号计算的Python库
 import time  # 用于处理基于时间的操作，例如延迟
 import json
-from excute.prompt.math_prompt import abstract_prompt  # 抽象prompt
-from model.api.llama_model_api import get_simulation_cot  # simulation_cot
+from excute.prompt.math_prompt import abstract_prompt, relation_prompt  # math_prompt
+from model.api.llama_model_api import get_simulation_cot_abstraction, get_simulation_cot_relation  # simulation_cot
 
 """
 1.超参数设置
@@ -72,6 +72,17 @@ for example in tqdm(data, desc="评估中", unit="例"):  # 遍历从数据集�
         try_cnt += 1
         try:
             # 得到背景知识
-            background_concepts = get_simulation_cot(example["problem"], abstract_prompt)  # 得到问题后的背景知识
-            bg_list = re.findall(r"\d+\.s+([^:]+):",background_concepts) # 背景知识集合
-            # 根据背景知识生成彼此相关的关系集合relation_list
+            background_concepts = get_simulation_cot_abstraction(example["problem"], abstract_prompt)  # 得到问题后的背景知识
+            bg_list = re.findall(r"\d+\.s+([^:]+):", background_concepts)  # 背景知识集合
+            print("[背景知识]: ", bg_list)
+            # 根据背景知识生成彼此相关的字典序relation_map
+            relation_map = {}
+            for i in range(len(bg_list) - 1):
+                concept1 = bg_list[i]
+                concept2 = bg_list[i + 1]
+                relation_input = relation_prompt.replace("{{concept1}}", concept1).replace("{{concept2}}", concept2)
+                relation_desc = get_simulation_cot_relation(relation_input)  # 得到概念之间的关系
+                relation_map[relation_desc] = 0 # k-v；(r,0/1)；默认为0
+                print("[背景知识]: ", relation_map);
+            # 根据每一个概念生成对应示例
+            example_list = []
