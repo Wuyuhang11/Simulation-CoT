@@ -29,7 +29,6 @@ abstract_prompt = """
 Q：{{question}} 
 """
 
-
 relation_prompt = """
 角色：假设你是数学大师，请你根据传入的概念1{concept1}和概念2{concept2}之间的联系，生成二者之间的关系，无需阐述过多内容，只需生成其关系relation即可。
 概念1：{{concept1}}
@@ -37,7 +36,7 @@ relation_prompt = """
 关系：
 """
 
-generate_example = """
+generate_example_prompt = """
 请根据定义的角色、对你的要求、以及生成示例，生成符合要求的响应内容
 
 角色：假设你是一个数学大师，请你利用自己所知的数学，根据传入的概念--{{concept}}生成相关的示例。
@@ -51,4 +50,12 @@ generate_example = """
     2.计算如下：1. \( (2 \cdot 3) \cdot 4 = 6 \cdot 4 = 24 \) 2. \( 2 \cdot (3 \cdot 4) = 2 \cdot 12 = 24 \)
   最终答案：表达式 \(2 \cdot 3 \cdot 4\) 不论如何使用括号，其结果都是 24。这表明，根据乘法的结合律，该表达式的值是唯一的。  
   
+"""
+
+sliding_window_example_prompt = """
+假设你是数学大师，对于数学问题的运用如火纯青，请你利用 示例1 和 示例2 的内容根据二者之间的 关系r 生成一个包含示例1和示例2的全新示例1_2 ！！
+注意：生成的内容只需要包含全新示例1_2，无需生成其他内容！！
+示例1：{{example1}}
+示例2：{{example2}}
+关系r：{{relation}}
 """

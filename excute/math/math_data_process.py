@@ -4,9 +4,10 @@ import ast  # 抽象语法树库，用于解析Python字符串格式的代码
 import sympy  # 一个用于符号计算的Python库
 import time  # 用于处理基于时间的操作，例如延迟
 import json
-from excute.prompt.math_prompt import abstract_prompt, relation_prompt, generate_example  # math_prompt
+from excute.prompt.math_prompt import abstract_prompt, relation_prompt, generate_example_prompt, \
+    sliding_window_example_prompt  # math_prompt
 from model.api.llama_model_api import get_simulation_cot_abstraction, get_simulation_cot_relation, \
-    get_simulation_cot_example  # simulation_cot
+    get_simulation_cot_example,get_simulation_cot_window  # simulation_cot
 
 """
 1.超参数设置
@@ -88,8 +89,14 @@ for example in tqdm(data, desc="评估中", unit="例"):  # 遍历从数据集�
             # 3.根据每一个概念生成对应示例
             example_list = []
             for i in range(len(bg_list)):
-                example_input = generate_example.replace("{{concept}}", bg_list[i]) # 置换后的生成示例的prompt
-                example_desc = get_simulation_cot_example(example_input) # 得到示例
-                example_list.append(example_desc) # 添加到集合中
+                example_input = generate_example_prompt.replace("{{concept}}", bg_list[i])  # 置换后的生成示例的prompt
+                example_desc = get_simulation_cot_example(example_input)  # 得到示例
+                example_list.append(example_desc)  # 添加到集合中
+                print("[示例集合]: ", example_list)
 
-            # 4.从第一个示例作为起点，对示例进行加噪
+            # 4.从第一个示例作为起点，利用滑动窗口的方式对示例进行加噪得到新的示例1_2
+            for i in range(len(example_list) - 1):
+                example_pre = example_list[i] # 示例1
+                example_next = example_list[i + 1] # 示例2
+
+                window_example_input = sliding_window_example_prompt.replace("{{example_pre}}", example_pre).replace("{{example_next}}", example_next).replace("{{relation}}",)
