@@ -5,9 +5,10 @@ import sympy  # 一个用于符号计算的Python库
 import time  # 用于处理基于时间的操作，例如延迟
 import json
 from excute.prompt.math_prompt import abstract_prompt, relation_prompt, generate_example_prompt, \
-    sliding_window_example_prompt  # math_prompt
+    sliding_window_example_prompt, generate_report_prompt, answer_prompt  # math_prompt
 from model.api.llama_model_api import get_simulation_cot_abstraction, get_simulation_cot_relation, \
-    get_simulation_cot_example,get_simulation_cot_window  # simulation_cot
+    get_simulation_cot_example, get_simulation_cot_window, get_simulation_cot_report, \
+    get_simulation_cot_answer  # simulation_cot
 
 """
 1.超参数设置
@@ -94,9 +95,31 @@ for example in tqdm(data, desc="评估中", unit="例"):  # 遍历从数据集�
                 example_list.append(example_desc)  # 添加到集合中
                 print("[示例集合]: ", example_list)
 
-            # 4.从第一个示例作为起点，利用滑动窗口的方式对示例进行加噪得到新的示例1_2
+            # 4.从第一个示例作为起点，利用【滑动窗口】的方式对示例进行【加噪】得到新的示例1_2
+            relation_iter = iter(relation_map.keys())  # 创建关系迭代器
+            example_pre = example_list[0]  # 起始示例
             for i in range(len(example_list) - 1):
-                example_pre = example_list[i] # 示例1
-                example_next = example_list[i + 1] # 示例2
+                example_next = example_list[i + 1]  # 下一个示例
+                relation = next(relation_iter, None)
+                if relation is None:
+                    break
+                relation_map[relation] = 1  # 将relation置为1表示已使用
+                window_example_input = sliding_window_example_prompt.replace("{{example_pre}}", example_pre).replace(
+                    "{{example_next}}", example_next).replace("{{relation}}", relation)
+                new_example = get_simulation_cot_window(window_example_input)  # 得到加噪后的新示例
+                example_pre = new_example  # 窗口滑动
 
-                window_example_input = sliding_window_example_prompt.replace("{{example_pre}}", example_pre).replace("{{example_next}}", example_next).replace("{{relation}}",)
+            final_example = example_pre
+            print("[最终示例]: ", final_example)
+
+            # 5.生成报告report对final_example进行降噪以生成完美示例
+            report_input = generate_report_prompt.replace("{{final_example}}", final_example).replace(
+                "{{background_concepts}}", background_concepts)
+            report = get_simulation_cot_report(report_input)
+
+            # 6.根据报告report和最终示例得到最终答案
+            answer_input = answer_prompt.replace("{{report}}", report) \
+                .replace("{{example}}", final_example) \
+                .replace("{{question}}", example["promblem"])
+            answer = get_simulation_cot_answer(answer_prompt) # 得到答案
+
